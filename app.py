@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 # --- CONFIGURACIÓN ---
 load_dotenv()
 BOT_TOKEN = os.getenv('TOKEN_TELEGRAM')
-GOOGLE_SHEET_NAME = 'CopiaPedro'
-WORKSHEET_NAME = 'Nuevo'  # Usar el nombre real de la hoja (tab)
+GOOGLE_SHEET_NAME = os.getenv('GOOGLE_SHEET_NAME')
+WORKSHEET_NAME = os.getenv('WORKSHEET_NAME')
 GOOGLE_CREDENTIALS_FILE = 'key.json'
 
 # Mapeo de letras a columnas de hoja de cálculo
