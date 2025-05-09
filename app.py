@@ -52,7 +52,27 @@ def encontrar_ultima_fila_con_valor(col_letra):
 
 # --- HANDLERS ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hola 👋🏼. Envía Letra e Importe para guardar un gasto.", parse_mode="Markdown")
+    await update.message.reply_text("Hola 👋🏼 Jessy. Envía letra e importe para guardar un gasto.", parse_mode="Markdown")
+
+async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    mensaje = f"""📋 *Información para Pumbilita sobre Gastos*:
+    
+• Hoja activa: *{hoja_activa}*
+• Columnas disponibles:
+  - V: Verdulería (columna B)
+  - S: Super & Farma (columna C)
+  - C: Comida calle (columna D)
+  - O: Otros + Comentarios (columna E + F)
+
+• Formatos válidosS:
+  - `V 5000` → Guarda $5000 en Verdulería
+  - `O 3000 chocobanana` → Guarda $3000 en Otros + comentario
+  - `D V` → Borra último registro en Verdulería
+
+• Cambiar hoja: `/hoja + nombre_en_mayúsculas`
+
+"""
+    await update.message.reply_text(mensaje, parse_mode="Markdown")
 
 # --- COMANDO /hoja ---
 async def set_hoja(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -142,6 +162,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # --- BOT ---
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("info", info))
 app.add_handler(CommandHandler("hoja", set_hoja))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
