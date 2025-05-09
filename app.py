@@ -54,10 +54,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hola 👋🏼. Envía Letra e Importe para guardar un gasto.", parse_mode="Markdown")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    texto = update.message.text.strip().upper()
+    texto = update.message.text.strip()
 
-    # Borrar último registro: "D V", "D C"
-    borrar_match = re.match(r'^D\s+([VSCO])$', texto)
+    # Borrar último registro: "D V", "D C", etc.
+    borrar_match = re.match(r'^D\s+([VSCO])$', texto.upper())
     if borrar_match:
         letra_borrar = borrar_match.group(1)
         col_letra_borrar = LETRA_A_COLUMNA[letra_borrar]
@@ -66,36 +66,52 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             fila = encontrar_ultima_fila_con_valor(col_letra_borrar)
             if fila:
                 celda = f"{col_letra_borrar}{fila}"
-                valor_borrado = sheet.acell(celda).value  # Lee el valor antes de borrar
-                sheet.update(celda, [[""]])               # Borra el valor
+                valor_borrado = sheet.acell(celda).value
+                sheet.update(celda, [[""]])
                 await update.message.reply_text(f"🗑️ Se eliminó el valor ${valor_borrado} de la columna '{letra_borrar}'.")
-
             else:
                 await update.message.reply_text(f"⚠️ No hay valores para borrar en esa columna.")
         except Exception as e:
             logging.error("❌ Error al borrar en Google Sheets:", exc_info=True)
         return
-    
-    
-    match = re.match(r'^([VSCO])\s+([\d.]+)$', texto)
 
+    # Caso especial: O con monto y texto
+    match_o_extendido = re.match(r'^O\s+([\d.]+)\s+(.+)$', texto, re.IGNORECASE)
+    if match_o_extendido:
+        monto_str, comentario = match_o_extendido.groups()
+        monto = float(monto_str)
+        col_monto = LETRA_A_COLUMNA['O']  # Columna 'E'
+        col_texto = 'F'  # Cambiá esto si querés otra columna para los comentarios
+
+        try:
+            fila = encontrar_fila_vacia(col_monto)
+            sheet.update(f"{col_monto}{fila}", [[monto]])
+            sheet.update(f"{col_texto}{fila}", [[comentario]])
+            monto_formateado = f"${monto:,.0f}".replace(",", ".")
+            await update.message.reply_text(f"✅ {monto_formateado} guardado en '{letra}' y tambiém el comentario")
+        except Exception as e:
+            logging.error("❌ Error al guardar monto y comentario en Google Sheets:", exc_info=True)
+        return
+
+    # Caso general: Letra + monto
+    match = re.match(r'^([VSCO])\s+([\d.]+)$', texto.upper())
     if not match:
-        # Si el mensaje no coincide con el formato esperado, respondemos que la opción es inválida.
         await update.message.reply_text("❌ Opción inválida. Usa el formato letra, espacio, importe")
         return
 
     letra, monto_str = match.groups()
-
     monto = float(monto_str)
     col_letra = LETRA_A_COLUMNA[letra]
 
     try:
         fila = encontrar_fila_vacia(col_letra)
         celda = f"{col_letra}{fila}"
-        sheet.update(celda, [[monto]])  # 👈 Esta línea es la clave
-        await update.message.reply_text(f"✅ ${monto:,.0f}".replace(',', '.') + f"guardado en celda '{letra}'.")
+        sheet.update(celda, [[monto]])
+        monto_formateado = f"${monto:,.0f}".replace(",", ".")
+        await update.message.reply_text(f"✅ {monto_formateado} guardado en columna '{letra}'.")
     except Exception as e:
         logging.error("❌ Error al guardar en Google Sheets:", exc_info=True)
+
 
 # --- BOT ---
 app = ApplicationBuilder().token(BOT_TOKEN).build()
