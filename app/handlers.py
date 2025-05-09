@@ -48,9 +48,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         col = LETRA_A_COLUMNA[letra]
         fila = encontrar_ultima_fila_con_valor(col)
         if fila:
-            sheet.update(f"{col}{fila}", [[""]])
+            get_sheet().sheet.update(f"{col}{fila}", [[""]])
             if letra == 'O':
-                sheet.update(f"F{fila}", [[""]])
+                get_sheet().sheet.update(f"F{fila}", [[""]])
             await update.message.reply_text(f"🗑️ Se eliminó el último valor de la columna '{letra}'.")
         else:
             await update.message.reply_text(f"⚠️ No hay valores para borrar en esa columna.")
@@ -61,8 +61,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         monto, comentario = match_o.groups()
         monto = int(float(monto))
         fila = encontrar_fila_vacia('E')
-        sheet.update(f"E{fila}", [[monto]])
-        sheet.update(f"F{fila}", [[comentario]])
+        get_sheet().sheet.update(f"E{fila}", [[monto]])
+        get_sheet().sheet.update(f"F{fila}", [[comentario]])
         await update.message.reply_text(f"✅ ${float(monto):,.0f} guardado en 'O' con comentario")
         return
 
@@ -72,7 +72,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         monto = int(float(monto))
         col = LETRA_A_COLUMNA[letra]
         fila = encontrar_fila_vacia(col)
-        sheet.update(f"{col}{fila}", [[monto]])
+        get_sheet().sheet.update(f"{col}{fila}", [[monto]])
         await update.message.reply_text(f"✅ ${float(monto):,.0f} guardado en columna '{letra}'")
         return
 
