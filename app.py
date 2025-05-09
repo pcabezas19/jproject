@@ -56,7 +56,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text.strip().upper()
 
-    # Borrar último registro: "D V", "D C", etc.
+    # Borrar último registro: "D V", "D C"
     borrar_match = re.match(r'^D\s+([VSCO])$', texto)
     if borrar_match:
         letra_borrar = borrar_match.group(1)
@@ -66,8 +66,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             fila = encontrar_ultima_fila_con_valor(col_letra_borrar)
             if fila:
                 celda = f"{col_letra_borrar}{fila}"
-                valor_borrado = sheet.acell(celda).value  # Leer el valor antes de borrar
-                sheet.update(celda, [[""]])               # Borrar el valor
+                valor_borrado = sheet.acell(celda).value  # Lee el valor antes de borrar
+                sheet.update(celda, [[""]])               # Borra el valor
                 await update.message.reply_text(f"🗑️ Se eliminó el valor ${valor_borrado} de la columna '{letra_borrar}'.")
 
             else:
@@ -93,7 +93,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         fila = encontrar_fila_vacia(col_letra)
         celda = f"{col_letra}{fila}"
         sheet.update(celda, [[monto]])  # 👈 Esta línea es la clave
-        await update.message.reply_text(f"✅ ${monto} guardado en celda {celda}.")
+        await update.message.reply_text(f"✅ ${monto:,.0f}".replace(',', '.') + f"guardado en celda '{letra}'.")
     except Exception as e:
         logging.error("❌ Error al guardar en Google Sheets:", exc_info=True)
 
