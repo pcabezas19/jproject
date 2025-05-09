@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 # --- CONFIGURACIÓN ---
 load_dotenv()
 BOT_TOKEN = os.getenv('TOKEN_TELEGRAM')
-GOOGLE_SHEET_NAME = 'Jproject'
-WORKSHEET_NAME = 'Hoja 1'  # Usar el nombre real de la hoja (tab)
+GOOGLE_SHEET_NAME = 'CopiaPedro'
+WORKSHEET_NAME = 'Nuevo'  # Usar el nombre real de la hoja (tab)
 GOOGLE_CREDENTIALS_FILE = 'key.json'
 
 # Mapeo de letras a columnas de hoja de cálculo
@@ -27,6 +27,7 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_FILE, scope)
 client = gspread.authorize(credentials)
 sheet = client.open(GOOGLE_SHEET_NAME).worksheet(WORKSHEET_NAME)
+hoja_activa = WORKSHEET_NAME
 
 # --- LOGGING ---
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +53,22 @@ def encontrar_ultima_fila_con_valor(col_letra):
 # --- HANDLERS ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hola 👋🏼. Envía Letra e Importe para guardar un gasto.", parse_mode="Markdown")
+
+# --- COMANDO /hoja ---
+async def set_hoja(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global sheet, hoja_activa
+    if not context.args:
+        await update.message.reply_text("❌ Escribe correctamente el nombre de la hoja")
+        return
+    nuevo_nombre = " ".join(context.args).strip()
+    try:
+        nueva_hoja = client.open(GOOGLE_SHEET_NAME).worksheet(nuevo_nombre)
+        sheet = nueva_hoja
+        hoja_activa = nuevo_nombre
+        await update.message.reply_text(f"✅ Ahora estás sobre la hoja *{hoja_activa}*", parse_mode="Markdown")
+    except Exception as e:
+        logging.error("Error al cambiar de hoja:", exc_info=True)
+        await update.message.reply_text("❌ No se pudo cambiar la hoja. ¿Está bien escrito el nombre?")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text.strip()
@@ -105,7 +122,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Caso general: Letra + monto
     match = re.match(r'^([VSCO])\s+([\d.]+)$', texto.upper())
     if not match:
-        await update.message.reply_text("❌ Opción inválida. Usa el formato letra, espacio, importe")
+        await update.message.reply_text("❌ Opción inválida. Usa el formato letra, espacio, importe.")
         return
 
     letra, monto_str = match.groups()
@@ -125,6 +142,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # --- BOT ---
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("hoja", set_hoja))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 print("🤖 Bot corriendo...")
