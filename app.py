@@ -49,9 +49,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     match = re.match(r'^([VSCO])\s+([\d.]+)$', texto)
 
     if not match:
-        return  # Ignoramos mensajes mal formateados o con letras inválidas
+        # Si el mensaje no coincide con el formato esperado, respondemos que la opción es inválida.
+        await update.message.reply_text("❌ Opción inválida. Usa el formato letra, espacio, importe")
+        return
 
     letra, monto_str = match.groups()
+
     monto = float(monto_str)
     col_letra = LETRA_A_COLUMNA[letra]
 
