@@ -40,12 +40,41 @@ def encontrar_fila_vacia(col_letra):
             return i + 1
     return len(valores) + 1 if len(valores) >= 4 else 4
 
+def encontrar_ultima_fila_con_valor(col_letra):
+    """Devuelve la última fila con datos en la columna especificada (desde la fila 4)."""
+    valores = sheet.col_values(ord(col_letra.upper()) - 64)
+    for i in range(len(valores) - 1, 3, -1):  # desde abajo hacia fila 4
+        if valores[i].strip() != "":
+            return i + 1
+    return None
+
+
 # --- HANDLERS ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hola 👋🏼. Mandame un mensaje como `V 4350` para guardar un gasto.", parse_mode="Markdown")
+    await update.message.reply_text("Hola 👋🏼. Envía Letra e Importe para guardar un gasto.", parse_mode="Markdown")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text.strip().upper()
+
+    # Borrar último registro: "D V", "D C", etc.
+    borrar_match = re.match(r'^D\s+([VSCO])$', texto)
+    if borrar_match:
+        letra_borrar = borrar_match.group(1)
+        col_letra_borrar = LETRA_A_COLUMNA[letra_borrar]
+
+        try:
+            fila = encontrar_ultima_fila_con_valor(col_letra_borrar)
+            if fila:
+                celda = f"{col_letra_borrar}{fila}"
+                sheet.update(celda, [[""]])  # Borrar el valor
+                await update.message.reply_text(f"🗑️ Último valor eliminado de la celda {celda}.")
+            else:
+                await update.message.reply_text(f"⚠️ No hay valores para borrar en esa columna.")
+        except Exception as e:
+            logging.error("❌ Error al borrar en Google Sheets:", exc_info=True)
+        return
+    
+    
     match = re.match(r'^([VSCO])\s+([\d.]+)$', texto)
 
     if not match:
