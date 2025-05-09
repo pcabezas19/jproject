@@ -65,15 +65,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             fila = encontrar_ultima_fila_con_valor(col_letra_borrar)
             if fila:
-                celda = f"{col_letra_borrar}{fila}"
-                valor_borrado = sheet.acell(celda).value
-                sheet.update(celda, [[""]])
-                await update.message.reply_text(f"🗑️ Se eliminó el valor ${valor_borrado} de la columna '{letra_borrar}'.")
+                celda_valor = f"{col_letra_borrar}{fila}"
+                valor_borrado = sheet.acell(celda_valor).value
+                sheet.update(celda_valor, [[""]])  # Borra monto
+
+                mensaje_confirmacion = f"🗑️ Se eliminó el valor ${valor_borrado} de la columna '{letra_borrar}'."
+
+                # Si es la columna 'O', también borramos el comentario en columna 'F'
+                if letra_borrar == 'O':
+                    celda_comentario = f"F{fila}"
+                    sheet.update(celda_comentario, [[""]])
+
+                await update.message.reply_text(mensaje_confirmacion)
             else:
                 await update.message.reply_text(f"⚠️ No hay valores para borrar en esa columna.")
         except Exception as e:
             logging.error("❌ Error al borrar en Google Sheets:", exc_info=True)
         return
+
 
     # Caso especial: O con monto y texto
     match_o_extendido = re.match(r'^O\s+([\d.]+)\s+(.+)$', texto, re.IGNORECASE)
