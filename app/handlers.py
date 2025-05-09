@@ -59,6 +59,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     match_o = re.match(r'^O\s+([\d.]+)\s+(.+)$', texto, re.IGNORECASE)
     if match_o:
         monto, comentario = match_o.groups()
+        monto = int(float(monto))
         fila = encontrar_fila_vacia('E')
         sheet.update(f"E{fila}", [[monto]])
         sheet.update(f"F{fila}", [[comentario]])
@@ -68,6 +69,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     match = re.match(r'^([VSCO])\s+([\d.]+)$', texto.upper())
     if match:
         letra, monto = match.groups()
+        monto = int(float(monto))
         col = LETRA_A_COLUMNA[letra]
         fila = encontrar_fila_vacia(col)
         sheet.update(f"{col}{fila}", [[monto]])

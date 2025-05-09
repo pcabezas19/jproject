@@ -1,9 +1,10 @@
-import gspread
+import gspread, json
 from oauth2client.service_account import ServiceAccountCredentials
-from .config import GOOGLE_CREDENTIALS_FILE, GOOGLE_SHEET_NAME, WORKSHEET_NAME
+from .config import GOOGLE_KEY_JSON, GOOGLE_SHEET_NAME, WORKSHEET_NAME
 
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-credentials = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_FILE, scope)
+credentials_info = json.loads(GOOGLE_KEY_JSON)
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_info, scope)
 client = gspread.authorize(credentials)
 sheet = client.open(GOOGLE_SHEET_NAME).worksheet(WORKSHEET_NAME)
 hoja_activa = WORKSHEET_NAME
